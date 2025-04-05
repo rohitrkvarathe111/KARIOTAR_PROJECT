@@ -10,6 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+""""
+THIS PROJECT IS CREATED FOR A SPECIFIC PURPOSE. DO NOT USE IT FOR PERSONAL OR PROFESSIONAL USE.
+"""
+
 from pathlib import Path
 import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
