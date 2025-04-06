@@ -2,11 +2,34 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+import getpass
 
 
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'main_kariotar.settings')
+
+    # Import Django settings after setting the module
+    from django.conf import settings  
+
+    RUNSERVER_CREAD = settings.RUNSERVER_CREAD
+    USERNAME = RUNSERVER_CREAD.get('username')
+    PASSWORD = RUNSERVER_CREAD.get('password')
+    
+    def authenticate():
+        entered_username = input("Enter your name: ")
+        entered_password = getpass.getpass("Enter your password: ")
+
+        if entered_username == USERNAME and entered_password == PASSWORD:
+            print("Authentication successful! Starting the server...")
+        else:
+            print("Authentication failed! Exiting...")
+            sys.exit(1)
+
+
+    # Run authentication before starting the server
+    authenticate()
+
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

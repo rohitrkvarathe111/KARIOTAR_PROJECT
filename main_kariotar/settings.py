@@ -158,6 +158,11 @@ BACKBLAZE_CREAD = {
       "bucket_name": "rohit67bucket"
     }
 
+RUNSERVER_CREAD = {
+      "username": "kariotar@gmail.com",
+      "password": "ROHIT@!@#123",
+    }
+
 DEBUG_TOOLBAR_PANELS = [
     # "ddt_request_history.panels.request_history.RequestHistoryPanel",  # Here it is
     "debug_toolbar.panels.versions.VersionsPanel",
