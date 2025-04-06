@@ -21,7 +21,7 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('kariotar_auth.urls')),   
-    path('comp/', include('CompanEazy.urls')), 
+    path('cmpz/', include('CompanEazy.urls')), 
 ]
 
 if settings.DEBUG:

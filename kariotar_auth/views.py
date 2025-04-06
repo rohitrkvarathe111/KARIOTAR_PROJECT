@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
+from .decorators import verified_user
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.sessions.backends.db import SessionStore
 from django.utils.timezone import localtime, now
@@ -323,21 +324,9 @@ def create_user_for_company(request):
 
 
 @api_view(['POST'])
+@verified_user("KSA", "KARIOTAR SUPER ADMIN")
 def Chnage_user_password(request):
-    session_id = request.GET.get('session_id')
-    if not session_id:
-        return Response({"error": "session_id not provided"}, status=status.HTTP_400_BAD_REQUEST)
-    try:
-        session = SessionStore(session_key=session_id)
-        session_data = dict(session.items())
-    except Exception:
-        return Response({"error": "Invalid session_id"}, status=status.HTTP_400_BAD_REQUEST)
-    K_user_type_id = session_data.get("user_type_id")
-    K_user_type = session_data.get('user_type')
-    
-    if K_user_type_id != "KSA" and K_user_type != "KARIOTAR SUPER ADMIN" :
-        return Response({"error": "KARIOTAR SUPER ADMIN not found."}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     new_password = request.data.get('new_password')
     username = request.data.get('username')
 
@@ -365,20 +354,9 @@ def Chnage_user_password(request):
     
 
 @api_view(['GET'])
+@verified_user("KSA", "KARIOTAR SUPER ADMIN")
 def user_comapny_helper(request, type):
-    session_id = request.GET.get('session_id')
-    if not session_id:
-        return Response({"error": "session_id not provided"}, status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        session = SessionStore(session_key=session_id)
-        session_data = session.load()  
-    except Exception:
-        return Response({"error": "Invalid session_id"}, status=status.HTTP_400_BAD_REQUEST)
-
-    if session_data.get("user_type_id") != "KSA" and session_data.get("user_type") != "KARIOTAR SUPER ADMIN":
-        return Response({"error": "KARIOTAR SUPER ADMIN not found."}, status=status.HTTP_400_BAD_REQUEST)
-
+    
     if type == "user":
         return Response({
             "company_list": list(CompanyMaster.objects.filter(is_active=True).values("id", "company_name", "company_email")),

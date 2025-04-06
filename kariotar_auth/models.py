@@ -87,6 +87,7 @@ class UserType(AuditModel):
 class UserMaster(AuditModel):
     
     first_name = models.CharField(max_length=200)
+    middle_name = models.CharField(max_length=200, blank=True, null=True)
     last_name = models.CharField(max_length=200)
     unique_username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(max_length=100, unique=True, null=False, blank=False)
