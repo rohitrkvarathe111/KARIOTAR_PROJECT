@@ -1,10 +1,145 @@
 from django.shortcuts import render
 import random
-
-
+from django.utils.timezone import now
+from kariotar_auth.decorators import verified_user
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework import status
+from django.contrib.sessions.backends.db import SessionStore
+from kariotar_auth.models import CompanyMaster, UserMaster, UserType
+from kariotar_auth.serializers import RegisterUserSerializer, UserMasterSerializer
+from . models import Employee, EmpProfile
+from helpergenius.views import generate_username, b2_upload_file
+from django.db import transaction
+import time
+import re
 
 def index(request):
     message = "Oops! The page you are looking for is lost in space."
     error = random.randint(400, 451)
     return render(request, 'index.html', {'message': message, "error": error})
+
+@api_view(['POST'])
+@verified_user("CHRA", "COMPANY HR ADMIN")
+def register_company_employee(request):
+    session_id = request.GET.get('session_id')
+    if not session_id:
+        return Response({"error": "session_id not provided"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        session = SessionStore(session_key=session_id)
+        session_data = dict(session.items())
+        company_id = session_data.get("company_id")
+        created_by = session_data.get("user_id")
+    except Exception:
+        return Response({"error": "Invalid session_id"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if not company_id:
+        return Response({"error": "Company ID missing in session"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        company_object = CompanyMaster.objects.get(id=company_id, is_active=True)
+    except CompanyMaster.DoesNotExist:
+        return Response({"error": "Company not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    timestamp = int(time.time())
+    data = request.data
+    required_fields = {"email", "first_name", "middle_name", "last_name", "user_type", "mobile_number", 
+                       "address", "assets", "emp_code", "date_joined", "admin_manager_id", "funt_manager_id", 
+                       "position", "department", "emp_type", "group", "salary_lpa"}
+    missing_fields = required_fields - data.keys()
+    if missing_fields:
+        return Response({"error": f"Missing required fields: {', '.join(missing_fields)}"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    file_fields = {"offer_letter", "emp_agreement", "nda"}
+    media_upload = {field: request.FILES.get(field) for field in file_fields}
+    
+    try:
+        user_type = UserType.objects.get(id=data["user_type"])
+    except UserType.DoesNotExist:
+        return Response({"error": "Invalid user_type"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    username = generate_username(data["first_name"], user_type.user_id)
+    
+    auth_master = {
+        "email": data["email"],
+        "first_name": data["first_name"],
+        "last_name": data["last_name"],
+        "username": username,
+        "password": username,
+    }
+    
+    user_master = {
+        "first_name": data["first_name"],
+        "middle_name": data["middle_name"],
+        "last_name": data["last_name"],
+        "unique_username": username,
+        "email": data["email"],
+        "mobile_number": data["mobile_number"],
+        "is_admin": False,
+        "address": data["address"],
+        "auth_user": None,  # To be set later
+        "company_master": company_object.id,
+        "user_type": user_type.id,
+        "created_by": created_by,
+        "updated_by": created_by,
+        "created_at": timestamp,
+        "updated_at": timestamp,
+    }
+    
+    uploaded_files = {}
+    for field, file in media_upload.items():
+        file_name = re.sub(r"[^\w\.-]", "_", f"{data['first_name']}/{field}/{username}/{int(time.time())}")
+        uploaded_files[field] = file_name  # Change this when integrating file storage
+    
+    try:
+        with transaction.atomic():
+            auth_serializer = RegisterUserSerializer(data=auth_master)
+            if auth_serializer.is_valid():
+                auth_instance = auth_serializer.save()
+                user_master["auth_user"] = auth_instance.id
+            else:
+                return Response({"auth_errors": auth_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            
+            user_serializer = UserMasterSerializer(data=user_master)
+            if user_serializer.is_valid():
+                usermaster_instance = user_serializer.save()
+            else:
+                # Rollback: Delete auth_instance if user creation fails
+                auth_instance.delete()
+                return Response({"user_errors": user_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            
+            try:
+                Employee.objects.create(
+                    emp_name=f"{data['first_name']} {data['middle_name']} {data['last_name']}",
+                    emp_code=data["emp_code"],
+                    company_master_id=company_object.id,
+                    user_master_id=usermaster_instance.id,
+                    user_id=auth_instance.id,
+                    group=data["group"],
+                    emp_type=data["emp_type"],
+                    department=data["department"],
+                    position=data["position"],
+                    funt_manager_id=data["funt_manager_id"],
+                    admin_manager_id=data["admin_manager_id"],
+                    date_joined=data["date_joined"],
+                    salary_lpa=data["salary_lpa"],
+                    is_active=True,
+                    offer_letter=uploaded_files.get("offer_letter"),
+                    emp_agreement=uploaded_files.get("emp_agreement"),
+                    nda=uploaded_files.get("nda"),
+                    assets=data["assets"],
+                    created_by_id=created_by,
+                    updated_by_id=created_by,
+                )
+            except Exception as e:
+                # Rollback: Delete both user_master and auth_instance if employee creation fails
+                usermaster_instance.delete()
+                auth_instance.delete()
+                return Response({"employee_errors": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+        return Response({"message": "Employee registered successfully"}, status=status.HTTP_201_CREATED)
+    
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

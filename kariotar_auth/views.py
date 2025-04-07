@@ -81,6 +81,7 @@ def register_company_with_CSA_user(request):
         
         user_master = {
             "first_name": data.get("first_name"),
+            "middle_name": data.get("middle_name"),
             "last_name": data.get("last_name"),
             "unique_username": username,
             "email": data.get("email"),
@@ -162,6 +163,7 @@ def User_login(request):
         request.session["last_name"] = user.last_name
         try:           
             user_object =  UserMaster.objects.get(email=email)
+            request.session["user_master_id"] = user_object.id
             request.session["unique_username"] = user_object.unique_username
             request.session["mobile_number"] = user_object.mobile_number
             request.session["is_admin"] = user_object.is_admin
@@ -287,6 +289,7 @@ def create_user_for_company(request):
     }
     user_master = {
         "first_name": data["first_name"],
+        "middle_name": data["middle_name"],
         "last_name": data["last_name"],
         "unique_username": username,
         "email": data["email"],

@@ -81,6 +81,8 @@ class UserType(AuditModel):
     updated_by = models.ForeignKey(
         User, related_name="user_type_updated", on_delete=models.CASCADE, null=True
     )
+    def __str__(self):
+        return self.user_type
 
 
 

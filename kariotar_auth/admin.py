@@ -13,8 +13,14 @@ class CompanyMasterAdmin(admin.ModelAdmin):
     list_filter = ('created_at',)
 
 class UserMasterAdmin(admin.ModelAdmin):
-    list_display = ('id', 'first_name', 'unique_username', 'email')  
-    search_fields = ('first_name', 'unique_username', 'email')
+    list_display = ('id', 'first_name', 'unique_username', 'email', 'get_user_type')  
+    search_fields = ('first_name', 'unique_username', 'email', 'get_user_type')
+
+    def get_user_type(self, obj):
+        return obj.user_type.user_type
+    
+    get_user_type.admin_order_field = 'user_type' 
+    get_user_type.short_description = 'User Type' 
 
 class MenuMasterAdmin(admin.ModelAdmin):
     list_display = ('subrole_id', 'sub_role', 'main_role')

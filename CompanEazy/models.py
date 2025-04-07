@@ -39,6 +39,8 @@ class Employee(AuditModel):
     admin_manager = models.ForeignKey(UserMaster, on_delete=models.CASCADE, related_name="admin_employees")
     salary_lpa = models.BigIntegerField(default=0)  # salary in paisa format
     date_joined = models.DateField()
+    office_mobile = models.CharField(max_length=15, blank=True, null=True)
+    office_email = models.EmailField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     offer_letter = models.CharField(max_length=255, blank=True, null=True)
     emp_agreement = models.CharField(max_length=255, blank=True, null=True)
