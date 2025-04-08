@@ -160,3 +160,39 @@ def register_company_employee(request):
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+
+@api_view(['GET'])
+@verified_user("CHRA", "COMPANY HR ADMIN")
+def get_registered_employee(request):
+    session_id = request.GET.get('session_id')
+    if not session_id:
+        return Response({"error": "session_id not provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        session = SessionStore(session_key=session_id)
+        session_data = dict(session.items())
+        company_id = session_data.get("company_id")
+    except Exception:
+        return Response({"error": "Invalid session_id"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if not company_id:
+        return Response({"error": "Company ID missing in session"}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        company_object = CompanyMaster.objects.get(id=company_id, is_active=True)
+    except CompanyMaster.DoesNotExist:
+        return Response({"error": "Company not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    page = int(request.GET.get('page', 1))
+    length = int(request.GET.get('length', 10))
+    query_params = {
+        "company_master": company_object,  
+        "is_active": True
+    }
+    employee_data = Employee.objects.filter(**query_params).values()[(page-1)*length:page*length]
+    
+    return Response({
+        "page": page,
+        "length": length,
+        "table": employee_data
+    }, status=status.HTTP_200_OK)
