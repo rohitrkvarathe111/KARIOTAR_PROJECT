@@ -147,7 +147,7 @@ def register_company_employee(request):
                 transaction.on_commit(lambda: auth_instance.delete())
                 return Response({"employee_errors": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             
-        return Response({"message": "Employee registered successfully"}, status=status.HTTP_201_CREATED)
+        return Response({"message": f"{emp_object.emp_name} as Employee registered successfully 😊"}, status=status.HTTP_201_CREATED)
     
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
