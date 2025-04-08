@@ -8,7 +8,7 @@ from rest_framework import status
 from django.contrib.sessions.backends.db import SessionStore
 from kariotar_auth.models import CompanyMaster, UserMaster, UserType
 from kariotar_auth.serializers import RegisterUserSerializer, UserMasterSerializer
-from . models import Employee, EmpProfile
+from . models import Employee, EmpProfile, EmpEducation
 from helpergenius.views import generate_username, b2_upload_file
 from django.db import transaction
 import time
@@ -134,6 +134,14 @@ def register_company_employee(request):
                     updated_by_id=created_by,
                 )
                 emp_profile = EmpProfile.objects.create(
+                    emp_name=emp_object.emp_name,
+                    emp_code=emp_object.emp_code,
+                    employee=emp_object,
+                    user=auth_instance,
+                    company_master=company_object,
+                    user_master=usermaster_instance,
+                )
+                emp_profile = EmpEducation.objects.create(
                     emp_name=emp_object.emp_name,
                     emp_code=emp_object.emp_code,
                     employee=emp_object,

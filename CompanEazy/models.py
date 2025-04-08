@@ -124,3 +124,35 @@ class EmpProfile(AuditModel):
 
     def __str__(self):
         return self.emp_name
+    
+
+class EmpEducation(AuditModel):
+
+    emp_name = models.CharField(max_length=255)
+    emp_code = models.CharField(max_length=50, unique=True)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name="educations")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="emp_educations")
+    user_master = models.ForeignKey(UserMaster, on_delete=models.CASCADE, related_name="emp_educations")
+    company_master = models.ForeignKey(CompanyMaster, on_delete=models.CASCADE)
+    ssc_grade = models.CharField(max_length=20, null=True, blank=True)
+    ssc_img = models.CharField(max_length=255, null=True, blank=True)
+    hsc_grade = models.CharField(max_length=20, null=True, blank=True)
+    hsc_img = models.CharField(max_length=255, null=True, blank=True)
+    ug_grade = models.CharField(max_length=20, null=True, blank=True)
+    ug_img = models.CharField(max_length=255, null=True, blank=True)
+    pg_grade = models.CharField(max_length=20, null=True, blank=True)
+    pg_img = models.CharField(max_length=255, null=True, blank=True)
+    other1_name = models.CharField(max_length=100, null=True, blank=True)
+    other1_grade = models.CharField(max_length=20, null=True, blank=True)
+    other1_img = models.CharField(max_length=255, null=True, blank=True)
+    other2_name = models.CharField(max_length=100, null=True, blank=True)
+    other2_grade = models.CharField(max_length=20, null=True, blank=True)
+    other2_img = models.CharField(max_length=255, null=True, blank=True)
+    verified_status = models.CharField(max_length=50, blank=True, null=True)
+
+    def __str__(self):
+        return self.emp_name
+
+
+
+
