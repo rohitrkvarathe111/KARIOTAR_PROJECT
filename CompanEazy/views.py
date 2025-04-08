@@ -90,6 +90,7 @@ def register_company_employee(request):
     uploaded_files = {}
     for field, file in media_upload.items():
         file_name = re.sub(r"[^\w\.-]", "_", f"{data['first_name']}/{field}/{username}/{int(time.time())}")
+        # uploaded_files[field] = b2_upload_file(file, file_name)
         uploaded_files[field] = file_name  # Change this when integrating file storage
     
     try:
@@ -110,12 +111,12 @@ def register_company_employee(request):
                 return Response({"user_errors": user_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             
             try:
-                Employee.objects.create(
+                emp_object = Employee.objects.create(
                     emp_name=f"{data['first_name']} {data['middle_name']} {data['last_name']}",
                     emp_code=data["emp_code"],
-                    company_master_id=company_object.id,
-                    user_master_id=usermaster_instance.id,
-                    user_id=auth_instance.id,
+                    company_master=company_object,
+                    user_master=usermaster_instance,
+                    user=auth_instance,
                     group=data["group"],
                     emp_type=data["emp_type"],
                     department=data["department"],
@@ -132,12 +133,20 @@ def register_company_employee(request):
                     created_by_id=created_by,
                     updated_by_id=created_by,
                 )
+                emp_profile = EmpProfile.objects.create(
+                    emp_name=emp_object.emp_name,
+                    emp_code=emp_object.emp_code,
+                    employee=emp_object,
+                    user=auth_instance,
+                    company_master=company_object,
+                    user_master=usermaster_instance,
+                )
             except Exception as e:
                 # Rollback: Delete both user_master and auth_instance if employee creation fails
-                usermaster_instance.delete()
-                auth_instance.delete()
+                transaction.on_commit(lambda: usermaster_instance.delete())
+                transaction.on_commit(lambda: auth_instance.delete())
                 return Response({"employee_errors": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    
+            
         return Response({"message": "Employee registered successfully"}, status=status.HTTP_201_CREATED)
     
     except Exception as e:
