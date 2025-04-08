@@ -189,10 +189,22 @@ def get_registered_employee(request):
         "company_master": company_object,  
         "is_active": True
     }
+
+    emp_name = request.GET.get('emp_name')
+    if emp_name:
+        query_params["emp_name__icontains"] = emp_name
+
+    emp_code = request.GET.get('emp_code')
+    if emp_code:
+        query_params["emp_code__icontains"] = emp_code
+
+    filter_count = Employee.objects.filter(**query_params).count()
     employee_data = Employee.objects.filter(**query_params).values()[(page-1)*length:page*length]
     
     return Response({
         "page": page,
-        "length": length,
+        "filter_count": filter_count,
         "table": employee_data
     }, status=status.HTTP_200_OK)
+
+
