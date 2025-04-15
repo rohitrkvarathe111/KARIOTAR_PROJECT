@@ -331,3 +331,36 @@ def update_emp_education(request, emp_id):
         return Response(
             emp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+@api_view(['GET','POST'])
+@verified_user("CHRA", "COMPANY HR ADMIN")
+def verified_emp(request, emp_id):
+    try:
+        employee = Employee.objects.get(id=emp_id) 
+        emp_profile = EmpProfile.objects.get(employee_id=emp_id)
+        emp_edu = EmpEducation.objects.get(employee_id=emp_id) 
+    except (Employee.DoesNotExist, EmpProfile.DoesNotExist, EmpEducation.DoesNotExist):
+        return Response({"error": "Employee data not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'POST':
+        verified_pro = request.data.get('verified_pro',[])
+        verified_edu = request.data.get('verified_edu',[])
+        if not isinstance(verified_pro, list) or not isinstance(verified_edu, list):
+            return Response({"error": "Only list type allowed"}, status=400)
+
+        emp_profile.verified_status = verified_pro
+        emp_edu.verified_status = verified_edu
+        
+        emp_profile.save()
+        emp_edu.save()
+        return Response({"verified": employee.emp_name, "emp_profile_verified": emp_profile.verified_status, 
+                        "emp_edu_verified": emp_edu.verified_status}, status=status.HTTP_200_OK)
+    
+    emp = EmployeeSerializer(employee).data
+    emp_edu = EmpEducationSerializer(emp_profile).data
+    emp_profile = EmpProfileSerializer(emp_profile).data
+    return Response({
+        "employee": emp, 
+        "emp_profile": emp_profile, 
+        "emp_education": emp_edu
+        }, status=status.HTTP_200_OK)

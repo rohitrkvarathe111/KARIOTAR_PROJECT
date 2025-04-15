@@ -8,4 +8,5 @@ urlpatterns = [
     path('update_emp_details/<int:emp_id>', views.update_emp_details, name='edit_employee_details'),
     path('update_emp_profile/<int:emp_id>', views.update_emp_profile, name='edit_employee_profile'),
     path('update_emp_education/<int:emp_id>', views.update_emp_education, name='edit_employee_profile'),
+    path('verified_emp/<int:emp_id>', views.verified_emp, name='verified_emp'),
 ]
