@@ -217,13 +217,13 @@ def edit_employee_details(request, emp_id):
     
     try:
         employee = Employee.objects.get(id=emp_id) 
-    except (Employee.DoesNotExist, EmpProfile.DoesNotExist, EmpEducation.DoesNotExist):
+    except Employee.DoesNotExist:
         return Response({"error": "Employee data not found"}, status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
         return Response(EmployeeSerializer(employee).data, status=status.HTTP_200_OK)
 
-    data = request.data
+    data = request.data.copy()
 
     # TODO : Update the employee details here
     # "emp_name", "emp_code", "group", "emp_type", "department", "position", "salary_lpa", "date_joined", 
@@ -236,6 +236,8 @@ def edit_employee_details(request, emp_id):
     for field, file in media_upload.items():
         file_name = getattr(employee, field, None)
         # uploaded_files[field] = b2_upload_file(file, file_name)
+        if file_name is None:
+            file_name = re.sub(r"[^\w\.-]", "_", f"{employee.user_master.first_name}/{field}/{employee.user_master.unique_username}/{int(time.time())}")
         uploaded_files[field] = file_name  # Change this when integrating file storage
     data.update(uploaded_files)
 
@@ -247,3 +249,84 @@ def edit_employee_details(request, emp_id):
     else:
         return Response(emp_serializer.errors,
                          status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['GET','PUT'])
+@verified_user("CHRA", "COMPANY HR ADMIN")
+def edit_employee_profile(request, emp_id):
+    
+    try:
+        emp_profile = EmpProfile.objects.get(employee_id=emp_id) 
+    except EmpProfile.DoesNotExist:
+        return Response({"error": "Employee data not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        return Response(EmpProfileSerializer(emp_profile).data, status=status.HTTP_200_OK)
+
+    data = request.data.copy()
+
+    # TODO : Update the employee details here data
+    # "emp_name", "emp_code", "personal_mobile", "personal_email", "dob", "blood_group", "gender", "pan", "aadhar", "bank_name", "bank_acc_no", "bank_ifsc", "pf_acc", "uan_acc"
+    # "insurance_meta_data", "emergency_mobile", "emergency_contact_name", "emergency_contact_relation", "current_address", "current_city", "current_state", "current_pincode", 
+    # "permanent_address", "permanent_city", "permanent_state", "permanent_pincode", "marital_status", "profile_links"
+    
+    file_fields = {"pan_img", "aadhar_img", "emp_img", "bank_img", }
+    media_upload = {field: request.FILES.get(field) for field in file_fields}
+
+    uploaded_files = {}
+    for field, file in media_upload.items():
+        file_name = getattr(emp_profile, field, None)
+        # uploaded_files[field] = b2_upload_file(file, file_name)
+        if file_name is None:
+            file_name = re.sub(r"[^\w\.-]", "_", f"{emp_profile.user_master.first_name}/{field}/{emp_profile.user_master.unique_username}/{int(time.time())}")
+        uploaded_files[field] = file_name  # Change this when integrating file storage
+    data.update(uploaded_files)
+
+    emp_serializer = EmpProfileSerializer(emp_profile, data, partial=True)
+    if emp_serializer.is_valid():
+        emp_serializer.save()
+        return Response(
+            emp_serializer.data, status=status.HTTP_200_OK)
+    else:
+        return Response(
+            emp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['GET','PUT'])
+@verified_user("CHRA", "COMPANY HR ADMIN")
+def edit_emp_education(request, emp_id):
+    
+    try:
+        emp_profile = EmpEducation.objects.get(employee_id=emp_id) 
+    except EmpEducation.DoesNotExist:
+        return Response({"error": "Employee data not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        return Response(EmpEducationSerializer(emp_profile).data, status=status.HTTP_200_OK)
+
+    data = request.data.copy()
+
+    # TODO : Update the employee details here data
+    # "emp_name", "emp_code", "personal_mobile", "personal_email", "dob", "blood_group", "gender", "pan", "aadhar", "bank_name", "bank_acc_no", "bank_ifsc", "pf_acc", "uan_acc"
+    # "insurance_meta_data", "emergency_mobile", "emergency_contact_name", "emergency_contact_relation", "current_address", "current_city", "current_state", "current_pincode", 
+    # "permanent_address", "permanent_city", "permanent_state", "permanent_pincode", "marital_status", "profile_links"
+    
+    file_fields = {"ssc_img", "hsc_img", "ug_img", "pg_img", "other1_img", "other2_img"}
+    media_upload = {field: request.FILES.get(field) for field in file_fields}
+
+    uploaded_files = {}
+    for field, file in media_upload.items():
+        file_name = getattr(emp_profile, field, None)
+        # uploaded_files[field] = b2_upload_file(file, file_name)
+        if file_name is None:
+            file_name = re.sub(r"[^\w\.-]", "_", f"{emp_profile.user_master.first_name}/{field}/{emp_profile.user_master.unique_username}/{int(time.time())}")
+        uploaded_files[field] = file_name  # Change this when integrating file storage
+    data.update(uploaded_files)
+
+    emp_serializer = EmpEducationSerializer(emp_profile, data, partial=True)
+    if emp_serializer.is_valid():
+        emp_serializer.save()
+        return Response(
+            emp_serializer.data, status=status.HTTP_200_OK)
+    else:
+        return Response(
+            emp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)

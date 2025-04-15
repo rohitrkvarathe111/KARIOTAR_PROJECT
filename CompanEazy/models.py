@@ -46,7 +46,7 @@ class Employee(AuditModel):
     emp_agreement = models.CharField(max_length=255, blank=True, null=True)
     nda = models.CharField(max_length=255, blank=True, null=True)
     resignation = models.CharField(max_length=255, blank=True, null=True)
-    # resignation_dt = models.DateField(blank=True, null=True)
+    resignation_dt = models.DateField(blank=True, null=True)
     assets = models.TextField(blank=True, null=True)
     created_by = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="employees_created"
@@ -150,6 +150,7 @@ class EmpEducation(AuditModel):
     other2_grade = models.CharField(max_length=20, null=True, blank=True)
     other2_img = models.CharField(max_length=255, null=True, blank=True)
     verified_status = models.CharField(max_length=50, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.emp_name
