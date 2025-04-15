@@ -53,7 +53,7 @@ def register_company_with_CSA_user(request):
         data = request.data
         timestamp = int(time.time())
         user_type = UserType.objects.get(user_type="COMPANY SUPER ADMIN")
-        username = generate_username(data.get("first_name"), user_type.user_id)
+        username = generate_username(data.get("first_name"), user_type.type_code)
         company_logo = request.FILES.get("company_logo")
         file_name = re.sub(r"[^\w\.-]", "_", f"{data.get('company_name')}/{username}/{timestamp}")
         # company_logo_path = b2_upload_file(company_logo, file_name)
@@ -168,7 +168,7 @@ def User_login(request):
             request.session["mobile_number"] = user_object.mobile_number
             request.session["is_admin"] = user_object.is_admin
             request.session["user_type"] = user_object.user_type.user_type
-            request.session["user_type_id"] = user_object.user_type.user_id
+            request.session["user_type_id"] = user_object.user_type.type_code
 
             company_object = CompanyMaster.objects.get(id=user_object.company_master.id)
             request.session["company_id"] = company_object.id
@@ -279,7 +279,7 @@ def create_user_for_company(request):
     except UserType.DoesNotExist:
         return Response({"error": "User type not found."}, status=status.HTTP_404_NOT_FOUND)
     
-    username = generate_username(data["first_name"], user_type.user_id)  
+    username = generate_username(data["first_name"], user_type.type_code)  
     auth_master = {
         "email": data["email"],
         "first_name": data["first_name"],
@@ -363,7 +363,7 @@ def user_comapny_helper(request, type):
     if type == "user":
         return Response({
             "company_list": list(CompanyMaster.objects.filter(is_active=True).values("id", "company_name", "company_email")),
-            "user_type_list": list(UserType.objects.filter(is_active=True).values("id", "user_type", "user_id"))
+            "user_type_list": list(UserType.objects.filter(is_active=True).values("id", "user_type", "type_code"))
         }, status=status.HTTP_200_OK)
 
     if type == "company":

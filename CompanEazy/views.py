@@ -60,7 +60,7 @@ def register_company_employee(request):
     except UserType.DoesNotExist:
         return Response({"error": "Invalid user_type"}, status=status.HTTP_400_BAD_REQUEST)
     
-    username = generate_username(data["first_name"], user_type.user_id)
+    username = generate_username(data["first_name"], user_type.type_code)
     
     auth_master = {
         "email": data["email"],

@@ -74,7 +74,7 @@ class UserType(AuditModel):
     
     is_active = models.BooleanField(default=True)
     user_type = models.CharField(max_length=100, null=False)
-    user_id = models.CharField(max_length=100)
+    type_code = models.CharField(max_length=100)
     created_by = models.ForeignKey(
         User, related_name="user_type_created", on_delete=models.CASCADE, null=True
     )
