@@ -213,7 +213,7 @@ def get_registered_employee(request):
 
 @api_view(['GET','PUT'])
 @verified_user("CHRA", "COMPANY HR ADMIN")
-def edit_employee_details(request, emp_id):
+def update_emp_details(request, emp_id):
     
     try:
         employee = Employee.objects.get(id=emp_id) 
@@ -252,7 +252,7 @@ def edit_employee_details(request, emp_id):
     
 @api_view(['GET','PUT'])
 @verified_user("CHRA", "COMPANY HR ADMIN")
-def edit_employee_profile(request, emp_id):
+def update_emp_profile(request, emp_id):
     
     try:
         emp_profile = EmpProfile.objects.get(employee_id=emp_id) 
@@ -293,7 +293,7 @@ def edit_employee_profile(request, emp_id):
 
 @api_view(['GET','PUT'])
 @verified_user("CHRA", "COMPANY HR ADMIN")
-def edit_emp_education(request, emp_id):
+def update_emp_education(request, emp_id):
     
     try:
         emp_profile = EmpEducation.objects.get(employee_id=emp_id) 
@@ -330,3 +330,4 @@ def edit_emp_education(request, emp_id):
     else:
         return Response(
             emp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
