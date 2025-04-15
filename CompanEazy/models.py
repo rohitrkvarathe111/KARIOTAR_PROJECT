@@ -1,5 +1,6 @@
 from django.db import models
 from kariotar_auth.models import User, CompanyMaster, UserMaster
+from datetime import datetime
 # from django.contrib.auth import get_user_model
 
 
@@ -158,3 +159,36 @@ class EmpEducation(AuditModel):
 
 
 
+class EmpAttendance(AuditModel):
+    ATTENDANCE_STATUS_CHOICES = [
+        ("Absent", "Absent"),
+        ("Present-Office", "Present - Office"),
+        ("Present-Home", "Present - Home"),
+        ("Leave-Full Day", "Leave - Full Day"),
+        ("Leave-Half Day", "Leave - Half Day"),
+        ("Festival & Flexi Holiday", "Festival & Flexi Holiday"),
+        ("Shift One", "Shift One"),
+        ("Shift Two", "Shift Two"),
+        ("Special Granted Conditional Leave", "Special Granted Conditional Leave"),
+        ("Present-Business Tour", "Present - Business Tour"),
+    ]
+
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name="emp_id")
+    user_master = models.ForeignKey(UserMaster, on_delete=models.CASCADE, related_name="usermaster_id")
+    company_master = models.ForeignKey(CompanyMaster, on_delete=models.CASCADE)
+    emp_name = models.CharField(max_length=255)
+    status = models.CharField(max_length=90, choices=ATTENDANCE_STATUS_CHOICES, default="Absent")
+
+    check_in = models.BigIntegerField(null=True, blank=True)
+    check_in_cords = models.CharField(max_length=100, null=True, blank=True)
+    check_in_ip = models.CharField(max_length=100, null=True, blank=True)
+    check_out = models.BigIntegerField(null=True, blank=True)
+    check_out_cords = models.CharField(max_length=100, null=True, blank=True)
+    check_out_ip = models.CharField(max_length=100, null=True, blank=True)
+    remark = models.TextField(null=True, blank=True)
+    approved_by = models.ForeignKey(UserMaster, on_delete=models.CASCADE, related_name="usermasterid")
+
+
+    def __str__(self):
+        check_in_date = datetime.fromtimestamp(self.check_in).date() if self.check_in else 'No Date'
+        return f"{self.emp_name} - {self.status} ({check_in_date})"

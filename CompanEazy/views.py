@@ -364,3 +364,5 @@ def verified_emp(request, emp_id):
         "emp_profile": emp_profile, 
         "emp_education": emp_edu
         }, status=status.HTTP_200_OK)
+
+
