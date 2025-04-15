@@ -8,6 +8,7 @@ from rest_framework import status
 from django.contrib.sessions.backends.db import SessionStore
 from kariotar_auth.models import CompanyMaster, UserMaster, UserType
 from kariotar_auth.serializers import RegisterUserSerializer, UserMasterSerializer
+from .serializers import EmployeeSerializer, EmpProfileSerializer, EmpEducationSerializer
 from . models import Employee, EmpProfile, EmpEducation
 from helpergenius.views import generate_username, b2_upload_file
 from django.db import transaction
@@ -208,3 +209,41 @@ def get_registered_employee(request):
     }, status=status.HTTP_200_OK)
 
 
+
+
+@api_view(['GET','PUT'])
+@verified_user("CHRA", "COMPANY HR ADMIN")
+def edit_employee_details(request, emp_id):
+    
+    try:
+        employee = Employee.objects.get(id=emp_id) 
+    except (Employee.DoesNotExist, EmpProfile.DoesNotExist, EmpEducation.DoesNotExist):
+        return Response({"error": "Employee data not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        return Response(EmployeeSerializer(employee).data, status=status.HTTP_200_OK)
+
+    data = request.data
+
+    # TODO : Update the employee details here
+    # "emp_name", "emp_code", "group", "emp_type", "department", "position", "salary_lpa", "date_joined", 
+    # "office_mobile", "office_email", "offer_letter", "emp_agreement", "nda", "resignation", "assets", "funt_manager", "admin_manager",
+    
+    file_fields = {"offer_letter", "emp_agreement", "nda", "resignation"}
+    media_upload = {field: request.FILES.get(field) for field in file_fields}
+
+    uploaded_files = {}
+    for field, file in media_upload.items():
+        file_name = getattr(employee, field, None)
+        # uploaded_files[field] = b2_upload_file(file, file_name)
+        uploaded_files[field] = file_name  # Change this when integrating file storage
+    data.update(uploaded_files)
+
+    emp_serializer = EmployeeSerializer(employee, data, partial=True)
+    if emp_serializer.is_valid():
+        emp_serializer.save()
+        return Response(
+            emp_serializer.data, status=status.HTTP_200_OK)
+    else:
+        return Response(emp_serializer.errors,
+                         status=status.HTTP_400_BAD_REQUEST)

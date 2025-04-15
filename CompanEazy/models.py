@@ -46,6 +46,7 @@ class Employee(AuditModel):
     emp_agreement = models.CharField(max_length=255, blank=True, null=True)
     nda = models.CharField(max_length=255, blank=True, null=True)
     resignation = models.CharField(max_length=255, blank=True, null=True)
+    # resignation_dt = models.DateField(blank=True, null=True)
     assets = models.TextField(blank=True, null=True)
     created_by = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="employees_created"
