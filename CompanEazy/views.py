@@ -388,16 +388,48 @@ def mark_attendance(request):
     if attendance_status not in attendance_choices_set:
         return Response({"error": "Invalid attendance status"}, status=status.HTTP_400_BAD_REQUEST)
     
-    check_in = request.data.get('check_in')
-    check_in_ip = request.data.get('check_in_ip')
-    check_in_img = request.FILES.get('check_in_img')
-    check_in_cords = request.data.get('check_in_cords')
-    check_in_remark = request.data.get('check_in_remark')
+    data = {
+        'status': attendance_status,
+        'date': request.data.get('date'),
+        'check_in': request.data.get('check_in'),  # epoch timestamp
+        'check_in_ip': request.data.get('check_in_ip'),
+        'check_in_cords': request.data.get('check_in_cords'),
+        'check_in_remark': request.data.get('check_in_remark'),
+    }
 
 
+    file_fields = {"check_in_img"}
+    media_upload = {field: request.FILES.get(field) for field in file_fields}
+
+    uploaded_files = {}
+    for field, file in media_upload.items():
+        file_name = getattr(employee, field, None)
+        # uploaded_files[field] = b2_upload_file(file, file_name)
+        if file_name is None:
+            file_name = re.sub(r"[^\w\.-]", "_", f"{employee.user_master.first_name}/{field}/{employee.user_master.unique_username}/{int(time.time())}")
+        uploaded_files[field] = file_name  # Change this when integrating file storage
+    data.update(uploaded_files)
+    try:
+        attendance_obj, created = EmpAttendance.objects.update_or_create(
+            employee=employee,
+            user_master=employee.user_master,
+            company_master=employee.company_master,
+            emp_name=employee.emp_name,
+            date=data.get('date'),
+            defaults={
+                'status': attendance_status,
+                'check_in': data.get("check_in"),
+                'check_in_ip': data.get("check_in_ip"),
+                'check_in_img': data.get("check_in_img"),
+                'check_in_cords': data.get("check_in_cords"),
+                'check_in_remark': data.get("check_in_remark"),
+            })
+        serialized_data = EmpAttendanceSerializer(attendance_obj).data
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
     return Response({
         "message": "Attendance marked successfully",
-        "data": attendance_choices,
+        "data": serialized_data,
     }, status=status.HTTP_200_OK)

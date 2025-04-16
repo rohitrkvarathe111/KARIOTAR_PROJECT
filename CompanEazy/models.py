@@ -178,7 +178,7 @@ class EmpAttendance(AuditModel):
     company_master = models.ForeignKey(CompanyMaster, on_delete=models.CASCADE)
     emp_name = models.CharField(max_length=255)
     status = models.CharField(max_length=90, choices=ATTENDANCE_STATUS_CHOICES, default="Absent")
-
+    date = models.DateField(null=False, blank=False)
     check_in = models.BigIntegerField(null=True, blank=True)
     check_in_cords = models.CharField(max_length=100, null=True, blank=True)
     check_in_ip = models.CharField(max_length=100, null=True, blank=True)
@@ -191,9 +191,8 @@ class EmpAttendance(AuditModel):
     check_out_remark = models.CharField(max_length=250, null=True, blank=True)
     total_hours = models.IntegerField(null=True, blank=True)
     remark = models.TextField(null=True, blank=True)
-    approved_by = models.ForeignKey(UserMaster, on_delete=models.CASCADE, related_name="usermasterid")
+    approved_by = models.ForeignKey(UserMaster, on_delete=models.CASCADE, related_name="usermasterid", null=True, blank=True)
 
 
     def __str__(self):
-        check_in_date = datetime.fromtimestamp(self.check_in).date() if self.check_in else 'No Date'
-        return f"{self.emp_name} - {self.status} ({check_in_date})"
+        return f"{self.emp_name} - {self.status}"

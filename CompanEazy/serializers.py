@@ -28,8 +28,6 @@ class EmpEducationSerializer(serializers.ModelSerializer):
 
 
 class EmpAttendanceSerializer(serializers.ModelSerializer):
-    check_in_date = serializers.SerializerMethodField()
-
     class Meta:
         model = EmpAttendance
         fields = '__all__'
