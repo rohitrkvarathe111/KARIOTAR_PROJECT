@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Employee, EmpProfile, EmpEducation
+from .models import Employee, EmpProfile, EmpEducation, EmpAttendance
+from datetime import datetime
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
@@ -24,3 +25,11 @@ class EmpEducationSerializer(serializers.ModelSerializer):
         # fields = '__all__'
         exclude = ["id", "employee", "user", "user_master", "company_master", 
                    "created_at", "updated_at", "verified_status", "is_active"]
+
+
+class EmpAttendanceSerializer(serializers.ModelSerializer):
+    check_in_date = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EmpAttendance
+        fields = '__all__'

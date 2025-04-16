@@ -8,8 +8,8 @@ from rest_framework import status
 from django.contrib.sessions.backends.db import SessionStore
 from kariotar_auth.models import CompanyMaster, UserMaster, UserType
 from kariotar_auth.serializers import RegisterUserSerializer, UserMasterSerializer
-from .serializers import EmployeeSerializer, EmpProfileSerializer, EmpEducationSerializer
-from . models import Employee, EmpProfile, EmpEducation
+from .serializers import EmployeeSerializer, EmpProfileSerializer, EmpEducationSerializer, EmpAttendanceSerializer
+from . models import Employee, EmpProfile, EmpEducation, EmpAttendance
 from helpergenius.views import generate_username, b2_upload_file
 from django.db import transaction
 import time
@@ -366,3 +366,38 @@ def verified_emp(request, emp_id):
         }, status=status.HTTP_200_OK)
 
 
+@api_view(['POST'])
+def mark_attendance(request):
+    session_id = request.GET.get('session_id')
+    if not session_id:
+        return Response({"error": "session_id not provided"}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        session = SessionStore(session_key=session_id)
+        session_data = dict(session.items())
+    except Exception:
+        return Response({"error": "Invalid session_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        employee = Employee.objects.get(user_master_id=session_data.get('user_master_id'))
+    except Employee.DoesNotExist:
+        return Response({"error": "Employee data not found"}, status=status.HTTP_404_NOT_FOUND)
+    attendance_choices_set = set(choice[0] for choice in EmpAttendance.ATTENDANCE_STATUS_CHOICES)
+    attendance_choices = [{"code": name, "company_type": name} for name in attendance_choices_set]
+
+    attendance_status = request.data.get('status')
+    if attendance_status not in attendance_choices_set:
+        return Response({"error": "Invalid attendance status"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    check_in = request.data.get('check_in')
+    check_in_ip = request.data.get('check_in_ip')
+    check_in_img = request.FILES.get('check_in_img')
+    check_in_cords = request.data.get('check_in_cords')
+    check_in_remark = request.data.get('check_in_remark')
+
+
+    
+
+    return Response({
+        "message": "Attendance marked successfully",
+        "data": attendance_choices,
+    }, status=status.HTTP_200_OK)

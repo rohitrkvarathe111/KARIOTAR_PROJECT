@@ -164,7 +164,7 @@ def User_login(request):
         try:           
             user_object =  UserMaster.objects.get(email=email)
             request.session["user_master_id"] = user_object.id
-            request.session["unique_username"] = user_object.unique_username
+            # request.session["unique_username"] = user_object.unique_username
             request.session["mobile_number"] = user_object.mobile_number
             request.session["is_admin"] = user_object.is_admin
             request.session["user_type"] = user_object.user_type.user_type
