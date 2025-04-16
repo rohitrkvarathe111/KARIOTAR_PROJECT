@@ -357,13 +357,13 @@ def Chnage_user_password(request):
     
 
 @api_view(['GET'])
-@verified_user("KSA", "KARIOTAR SUPER ADMIN")
+# @verified_user("KSA", "KARIOTAR SUPER ADMIN")
 def user_comapny_helper(request, type):
     
     if type == "user":
         return Response({
             "company_list": list(CompanyMaster.objects.filter(is_active=True).values("id", "company_name", "company_email")),
-            "user_type_list": list(UserType.objects.filter(is_active=True).values("id", "user_type", "type_code"))
+            "user_type_list": list(UserType.objects.filter(is_active=True).values("id", "user_type", "type_code").order_by("id"))
         }, status=status.HTTP_200_OK)
 
     if type == "company":
