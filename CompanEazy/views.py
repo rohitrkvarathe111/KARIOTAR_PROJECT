@@ -13,6 +13,7 @@ from . models import Employee, EmpProfile, EmpEducation, EmpAttendance
 from helpergenius.views import generate_username, b2_upload_file, get_ip_and_location
 from django.db import transaction
 import time
+from datetime import datetime, timedelta
 import re
 
 def index(request):
@@ -390,16 +391,24 @@ def checkin_attendance(request):
 
     data = {
         'status': request.data.get('status'),
-        'date': request.data.get('date'),
         'check_in': request.data.get('check_in'),                   # epoch timestamp
         'check_in_ip': request.data.get('check_in_ip', coords_ip.get("ip")),
         'check_in_cords': request.data.get('check_in_cords', coords_ip.get("location")),
         'check_in_remark': request.data.get('check_in_remark'),
     }
-    if not data.get("date"):
-        return Response({"error": "Date is required"}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        dt = datetime.strptime(data.get("check_in"), "%Y-%m-%dT%H:%M")
+        data["check_in"] = int(dt.timestamp())
+        data["date"] = dt.date()
+    except Exception as e:
+        return Response({"error": f"'check_in' must be in format 'YYYY-MM-DDTHH:MM': {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if data.get("date") < (datetime.now().date() - timedelta(days=7)):
+        return Response({"error": "Attendance date should not be older than 7 days"}, status=status.HTTP_400_BAD_REQUEST)
+    
     elif data.get("status") not in attendance_choices_set:
         return Response({"error": "Invalid attendance status"}, status=status.HTTP_400_BAD_REQUEST)
+    
     elif data.get("status") in ["Present-Office", "Present - Home", "Leave - Half Day", "Shift One", "Shift Two"]:
         missing_fields = []
         required_fields = ['check_in',]
@@ -407,7 +416,10 @@ def checkin_attendance(request):
             if not data.get(field):
                 missing_fields.append(field)
         if missing_fields:
-            return Response({"error": f"if you are selecting from this {required_fields} then Missing required fields for status '{data['status']}': {', '.join(missing_fields)}"},status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                "error": f"if you are selecting from this {required_fields} then Missing required fields for status '{data['status']}': {', '.join(missing_fields)}"
+                },status=status.HTTP_400_BAD_REQUEST)
+        
     elif data.get("status") in ["Absent", "Leave - Full Day", "Festival & Flexi Holiday", "Week Off", "Special Granted Conditional Leave","Present - Business Tour"]:
         data["check_in"] = None
         data["check_in_ip"] = None
@@ -473,3 +485,36 @@ def checkout_attendance(request):
         session_data = dict(session.items())
     except Exception:
         return Response({"error": "Invalid session_id"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        employee = Employee.objects.get(user_master_id=session_data.get('user_master_id'))
+        coords_ip = get_ip_and_location()
+    except Employee.DoesNotExist:
+        return Response({"error": "Employee data not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    data = {
+        'date': request.data.get('date'),
+        'check_out': request.data.get('check_out'),                   # epoch timestamp
+        'check_out_ip': request.data.get('check_out_ip', coords_ip.get("ip")),
+        'check_out_cords': request.data.get('check_out_cords', coords_ip.get("location")),
+        'check_out_remark': request.data.get('check_out_remark'),
+    }
+    
+    try:
+        checkout_obj = EmpAttendance.objects.get(
+                    employee=employee,
+                    user_master=employee.user_master,
+                    company_master=employee.company_master,
+                    emp_name=employee.emp_name,
+                    date=data.get("date"))
+    except Exception as e:
+        return Response({
+            "error": f"Attendance record not found for the given date. Details: {str(e)}",
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    if checkout_obj.status in ["Absent", "Leave - Full Day", "Festival & Flexi Holiday", "Week Off", "Special Granted Conditional Leave","Present - Business Tour"]:
+        return Response({"error": f"You can't checkout the attendance for status '{checkout_obj.status}'. Please update or contact the HR admin."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    checkout_obj.check_out = data.get("check_out")
+
+    return Response({"checkout_obj": checkout_obj.emp_name}, status=status.HTTP_200_OK)
