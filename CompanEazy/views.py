@@ -10,7 +10,7 @@ from kariotar_auth.models import CompanyMaster, UserMaster, UserType
 from kariotar_auth.serializers import RegisterUserSerializer, UserMasterSerializer
 from .serializers import EmployeeSerializer, EmpProfileSerializer, EmpEducationSerializer, EmpAttendanceSerializer
 from . models import Employee, EmpProfile, EmpEducation, EmpAttendance
-from helpergenius.views import generate_username, b2_upload_file
+from helpergenius.views import generate_username, b2_upload_file, get_ip_and_location
 from django.db import transaction
 import time
 import re
@@ -379,6 +379,7 @@ def mark_attendance(request):
 
     try:
         employee = Employee.objects.get(user_master_id=session_data.get('user_master_id'))
+        coords_ip = get_ip_and_location()
     except Employee.DoesNotExist:
         return Response({"error": "Employee data not found"}, status=status.HTTP_404_NOT_FOUND)
     attendance_choices_set = set(choice[0] for choice in EmpAttendance.ATTENDANCE_STATUS_CHOICES)
@@ -387,9 +388,9 @@ def mark_attendance(request):
     data = {
         'status': request.data.get('status'),
         'date': request.data.get('date'),
-        'check_in': request.data.get('check_in'),  # epoch timestamp
-        'check_in_ip': request.data.get('check_in_ip'),
-        'check_in_cords': request.data.get('check_in_cords'),
+        'check_in': request.data.get('check_in'),                   # epoch timestamp
+        'check_in_ip': request.data.get('check_in_ip', coords_ip.get("ip")),
+        'check_in_cords': request.data.get('check_in_cords', coords_ip.get("location")),
         'check_in_remark': request.data.get('check_in_remark'),
     }
     if not data.get("date"):

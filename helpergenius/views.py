@@ -1,6 +1,7 @@
 import requests
 from django.conf import settings
 import random
+import socket
 import string
 import uuid
 from kariotar_auth.models import UserMaster
@@ -98,3 +99,35 @@ def generate_username(first_name: str, user_type: str) -> str:
         username = "".join(username.split())
         if not UserMaster.objects.filter(unique_username=username).exists():
             return username
+
+
+def get_ip_and_location() -> str:
+    try:
+        # Connect to a public DNS server (doesn't send data, just used to get local IP)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        response = requests.get('https://ipinfo.io/json')
+        data = response.json()
+        coords_ip = {
+            "status": True,
+            "ip": data.get("ip"),
+            "city": data.get("city"),
+            "region": data.get("region"),
+            "country": data.get("country"),
+            "location": data.get("loc"),  # Latitude,Longitude
+            "org": data.get("org"),
+        }
+    except Exception as e:
+        e = str(e)
+        coords_ip = {
+            "status": True,
+            "ip": None,
+            "city": None,
+            "region": None,
+            "country": None,
+            "location": None,  
+            "org": None,
+        }
+    return coords_ip
