@@ -442,8 +442,8 @@ def checkin_attendance(request):
         attendance_obj = EmpAttendance.objects.get(employee=employee,user_master=employee.user_master,
                                 company_master=employee.company_master, emp_name=employee.emp_name, date=data.get('date'))
     
-        if attendance_obj and attendance_obj.approved_by is not None:
-            return Response({"message": "You cannot update the attendance after it has been approved. Please contact the HR admin."}, status=status.HTTP_400_BAD_REQUEST)
+        if attendance_obj and attendance_obj.approved_by is not None or attendance_obj.check_out is not None:
+            return Response({"message": "You cannot update the attendance after it has been approved or Checkout. Please contact the HR admin."}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         print(f"Error occurred while updating attendance: {e}")
     
