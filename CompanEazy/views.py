@@ -384,19 +384,31 @@ def mark_attendance(request):
     attendance_choices_set = set(choice[0] for choice in EmpAttendance.ATTENDANCE_STATUS_CHOICES)
     attendance_choices = [{"code": name, "company_type": name} for name in attendance_choices_set]
 
-    attendance_status = request.data.get('status')
-    if attendance_status not in attendance_choices_set:
-        return Response({"error": "Invalid attendance status"}, status=status.HTTP_400_BAD_REQUEST)
-    
     data = {
-        'status': attendance_status,
+        'status': request.data.get('status'),
         'date': request.data.get('date'),
         'check_in': request.data.get('check_in'),  # epoch timestamp
         'check_in_ip': request.data.get('check_in_ip'),
         'check_in_cords': request.data.get('check_in_cords'),
         'check_in_remark': request.data.get('check_in_remark'),
     }
-
+    if not data.get("date"):
+        return Response({"error": "Date is required"}, status=status.HTTP_400_BAD_REQUEST)
+    elif data.get("status") not in attendance_choices_set:
+        return Response({"error": "Invalid attendance status"}, status=status.HTTP_400_BAD_REQUEST)
+    elif data.get("status") in ["Present-Office", "Present - Home", "Leave - Half Day", "Shift One", "Shift Two"]:
+        missing_fields = []
+        required_fields = ['check_in',]
+        for field in required_fields:
+            if not data.get(field):
+                missing_fields.append(field)
+        if missing_fields:
+            return Response({"error": f"if you are selecting from this {required_fields} then Missing required fields for status '{data['status']}': {', '.join(missing_fields)}"},status=status.HTTP_400_BAD_REQUEST)
+    elif data.get("status") in ["Absent", "Leave - Full Day", "Festival & Flexi Holiday", "Week Off", "Special Granted Conditional Leave","Present - Business Tour"]:
+        data["check_in"] = None
+        data["check_in_ip"] = None
+        data["check_in_cords"] = None
+        
 
     file_fields = {"check_in_img"}
     media_upload = {field: request.FILES.get(field) for field in file_fields}
@@ -409,6 +421,16 @@ def mark_attendance(request):
             file_name = re.sub(r"[^\w\.-]", "_", f"{employee.user_master.first_name}/{field}/{employee.user_master.unique_username}/{int(time.time())}")
         uploaded_files[field] = file_name  # Change this when integrating file storage
     data.update(uploaded_files)
+    
+    try:
+        attendance_obj = EmpAttendance.objects.get(employee=employee,user_master=employee.user_master,
+                                company_master=employee.company_master, emp_name=employee.emp_name, date=data.get('date'))
+    
+        if attendance_obj and attendance_obj.approved_by is not None:
+            return Response({"message": "You cannot update the attendance after it has been approved. Please contact the HR admin."}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        print(f"Error occurred while updating attendance: {e}")
+    
     try:
         attendance_obj, created = EmpAttendance.objects.update_or_create(
             employee=employee,
@@ -417,19 +439,19 @@ def mark_attendance(request):
             emp_name=employee.emp_name,
             date=data.get('date'),
             defaults={
-                'status': attendance_status,
+                'status': data.get("status"),
                 'check_in': data.get("check_in"),
                 'check_in_ip': data.get("check_in_ip"),
                 'check_in_img': data.get("check_in_img"),
                 'check_in_cords': data.get("check_in_cords"),
                 'check_in_remark': data.get("check_in_remark"),
             })
-        serialized_data = EmpAttendanceSerializer(attendance_obj).data
+        # serialized_data = EmpAttendanceSerializer(attendance_obj).data
+        message = "Attendance marked successfully." if created else "Attendance updated successfully."
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-
     return Response({
-        "message": "Attendance marked successfully",
-        "data": serialized_data,
+        "message": message,
+        # "data": serialized_data,
     }, status=status.HTTP_200_OK)

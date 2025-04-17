@@ -169,6 +169,7 @@ class EmpAttendance(AuditModel):
         ("Festival & Flexi Holiday", "Festival & Flexi Holiday"),
         ("Shift One", "Shift One"),
         ("Shift Two", "Shift Two"),
+        ("Week Off", "Week Off"),
         ("Special Granted Conditional Leave", "Special Granted Conditional Leave"),
         ("Present-Business Tour", "Present - Business Tour"),
     ]

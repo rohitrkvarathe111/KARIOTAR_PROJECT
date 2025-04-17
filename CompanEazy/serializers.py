@@ -30,4 +30,6 @@ class EmpEducationSerializer(serializers.ModelSerializer):
 class EmpAttendanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmpAttendance
-        fields = '__all__'
+        # fields = '__all__'
+        exclude = ["id", "employee", "user_master", "company_master", 
+                   "created_at", "updated_at", "approved_by", ]
