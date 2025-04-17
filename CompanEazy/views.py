@@ -367,7 +367,7 @@ def verified_emp(request, emp_id):
 
 
 @api_view(['POST'])
-def mark_attendance(request):
+def checkin_attendance(request):
     session_id = request.GET.get('session_id')
     if not session_id:
         return Response({"error": "session_id not provided"}, status=status.HTTP_400_BAD_REQUEST)
@@ -456,3 +456,5 @@ def mark_attendance(request):
         "message": message,
         # "data": serialized_data,
     }, status=status.HTTP_200_OK)
+
+
