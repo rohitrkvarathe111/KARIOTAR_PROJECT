@@ -463,7 +463,7 @@ def checkin_attendance(request):
                 'check_in_remark': data.get("check_in_remark"),
             })
         # serialized_data = EmpAttendanceSerializer(attendance_obj).data
-        message = "Attendance marked successfully." if created else "Attendance updated successfully."
+        message = "Check-in recorded successfully." if created else "Attendance updated successfully."
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
@@ -493,12 +493,18 @@ def checkout_attendance(request):
         return Response({"error": "Employee data not found"}, status=status.HTTP_404_NOT_FOUND)
     
     data = {
-        'date': request.data.get('date'),
         'check_out': request.data.get('check_out'),                   # epoch timestamp
         'check_out_ip': request.data.get('check_out_ip', coords_ip.get("ip")),
         'check_out_cords': request.data.get('check_out_cords', coords_ip.get("location")),
         'check_out_remark': request.data.get('check_out_remark'),
     }
+
+    try:
+        dt = datetime.strptime(data.get("check_out"), "%Y-%m-%dT%H:%M")
+        data["check_out"] = int(dt.timestamp())
+        data["date"] = dt.date()
+    except Exception as e:
+        return Response({"error": f"'check_in' must be in format 'YYYY-MM-DDTHH:MM': {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
     
     try:
         checkout_obj = EmpAttendance.objects.get(
@@ -515,6 +521,32 @@ def checkout_attendance(request):
     if checkout_obj.status in ["Absent", "Leave - Full Day", "Festival & Flexi Holiday", "Week Off", "Special Granted Conditional Leave","Present - Business Tour"]:
         return Response({"error": f"You can't checkout the attendance for status '{checkout_obj.status}'. Please update or contact the HR admin."}, status=status.HTTP_400_BAD_REQUEST)
     
-    checkout_obj.check_out = data.get("check_out")
+    elif checkout_obj.check_out is not None:
+        return Response({"error": "You have already checked out for the given date. Contact the HR admin"}, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response({"checkout_obj": checkout_obj.emp_name}, status=status.HTTP_200_OK)
+    elif data["check_out"] < checkout_obj.check_in:
+        return Response({"error": "Check-out time should be greater than check-in time."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    file_fields = {"check_out_img"}
+    media_upload = {field: request.FILES.get(field) for field in file_fields}
+
+    uploaded_files = {}
+    for field, file in media_upload.items():
+        file_name = getattr(employee, field, None)
+        # uploaded_files[field] = b2_upload_file(file, file_name)
+        if file_name is None:
+            file_name = re.sub(r"[^\w\.-]", "_", f"{employee.user_master.first_name}/{field}/{employee.user_master.unique_username}/{int(time.time())}")
+        uploaded_files[field] = file_name  # Change this when integrating file storage
+    data.update(uploaded_files)
+    
+    hours = round((data.get("check_out") - checkout_obj.check_in)/3600 ,1) * 10
+
+    checkout_obj.check_out = data.get("check_out")
+    checkout_obj.check_out_ip = data.get("check_out_ip")
+    checkout_obj.check_out_cords = data.get("check_out_cords")
+    checkout_obj.check_out_remark = data.get("check_out_remark")
+    checkout_obj.check_out_img = data.get("check_out_img") 
+    checkout_obj.total_hours = hours
+    checkout_obj.save()
+
+    return Response({"message": "Check-out recorded successfully."}, status=status.HTTP_200_OK)
