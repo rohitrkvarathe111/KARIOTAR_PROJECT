@@ -366,7 +366,7 @@ def verified_emp(request, emp_id):
         }, status=status.HTTP_200_OK)
 
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 def checkin_attendance(request):
     session_id = request.GET.get('session_id')
     if not session_id:
@@ -376,14 +376,17 @@ def checkin_attendance(request):
         session_data = dict(session.items())
     except Exception:
         return Response({"error": "Invalid session_id"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    attendance_choices_set = set(choice[0] for choice in EmpAttendance.ATTENDANCE_STATUS_CHOICES)
+    attendance_choices = [{"code": name, "company_type": name} for name in attendance_choices_set]
+    if request.method == 'GET':
+        return Response({"attendance_choices": attendance_choices}, status=status.HTTP_200_OK)
 
     try:
         employee = Employee.objects.get(user_master_id=session_data.get('user_master_id'))
         coords_ip = get_ip_and_location()
     except Employee.DoesNotExist:
         return Response({"error": "Employee data not found"}, status=status.HTTP_404_NOT_FOUND)
-    attendance_choices_set = set(choice[0] for choice in EmpAttendance.ATTENDANCE_STATUS_CHOICES)
-    attendance_choices = [{"code": name, "company_type": name} for name in attendance_choices_set]
 
     data = {
         'status': request.data.get('status'),
@@ -458,3 +461,15 @@ def checkin_attendance(request):
     }, status=status.HTTP_200_OK)
 
 
+
+
+@api_view(['POST'])
+def checkout_attendance(request):
+    session_id = request.GET.get('session_id')
+    if not session_id:
+        return Response({"error": "session_id not provided"}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        session = SessionStore(session_key=session_id)
+        session_data = dict(session.items())
+    except Exception:
+        return Response({"error": "Invalid session_id"}, status=status.HTTP_400_BAD_REQUEST)
