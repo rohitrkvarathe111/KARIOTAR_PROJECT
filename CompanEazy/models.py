@@ -162,16 +162,16 @@ class EmpEducation(AuditModel):
 class EmpAttendance(AuditModel):
     ATTENDANCE_STATUS_CHOICES = [
         ("Absent", "Absent"),
-        ("Present-Office", "Present - Office"),
-        ("Present-Home", "Present - Home"),
-        ("Leave-Full Day", "Leave - Full Day"),
-        ("Leave-Half Day", "Leave - Half Day"),
-        ("Festival & Flexi Holiday", "Festival & Flexi Holiday"),
-        ("Shift One", "Shift One"),
-        ("Shift Two", "Shift Two"),
-        ("Week Off", "Week Off"),
-        ("Special Granted Conditional Leave", "Special Granted Conditional Leave"),
-        ("Present-Business Tour", "Present - Business Tour"),
+        ("Present-Office", "Present-Office"),
+        ("Present-Home", "Present-Home"),
+        ("Leave-Full-Day", "Leave-Full-Day"),
+        ("Leave-Half-Day", "Leave-Half-Day"),
+        ("Festival-&-Flexi-Holiday", "Festival-&-Flexi-Holiday"),
+        ("Shift-One", "Shift-One"),
+        ("Shift-Two", "Shift-Two"),
+        ("Week-Off", "Week-Off"),
+        ("Special-Granted-Conditional-Leave", "Special-Granted-Conditional-Leave"),
+        ("Present-Business-Tour", "Present-Business-Tour"),
     ]
 
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name="emp_id")

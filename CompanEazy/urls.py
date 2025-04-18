@@ -11,4 +11,5 @@ urlpatterns = [
     path('verified_emp/<int:emp_id>', views.verified_emp, name='verified_emp'),
     path('checkin_attendance', views.checkin_attendance, name='checkin_attendance'),
     path('checkout_attendance', views.checkout_attendance, name='checkout_attendance'),
+    path('get_self_attendance', views.get_self_attendance, name='get_self_attendance'),
 ]

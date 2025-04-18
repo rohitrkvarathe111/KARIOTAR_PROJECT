@@ -550,3 +550,29 @@ def checkout_attendance(request):
     checkout_obj.save()
 
     return Response({"message": "Check-out recorded successfully."}, status=status.HTTP_200_OK)
+
+
+
+@api_view(['GET','PUT'])
+def get_self_attendance(request):
+    session_id = request.GET.get('session_id')
+    if not session_id:
+        return Response({"error": "session_id not provided"}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        session = SessionStore(session_key=session_id)
+        session_data = dict(session.items())
+    except Exception:
+        return Response({"error": "Invalid session_id"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        employee = Employee.objects.get(user_master_id=session_data.get('user_master_id'))
+    except Employee.DoesNotExist:
+        return Response({"error": "Employee data not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    attendance_list = EmpAttendance.objects.filter(employee=employee, user_master=employee.user_master, 
+                                                   company_master=employee.company_master).order_by('date')
+
+    attendance_list = EmpAttendanceSerializer(attendance_list, many=True).data
+    return Response(attendance_list, status=status.HTTP_200_OK)
+
+
