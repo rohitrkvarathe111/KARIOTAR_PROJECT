@@ -409,7 +409,7 @@ def checkin_attendance(request):
     elif data.get("status") not in attendance_choices_set:
         return Response({"error": "Invalid attendance status"}, status=status.HTTP_400_BAD_REQUEST)
     
-    elif data.get("status") in ["Present-Office", "Present - Home", "Leave - Half Day", "Shift One", "Shift Two"]:
+    elif data.get("status") in ["Present-Office", "Present-Home", "Leave-Half-Day",  "Shift-One", "Shift-Two"]:
         missing_fields = []
         required_fields = ['check_in',]
         for field in required_fields:
@@ -420,7 +420,7 @@ def checkin_attendance(request):
                 "error": f"if you are selecting from this {required_fields} then Missing required fields for status '{data['status']}': {', '.join(missing_fields)}"
                 },status=status.HTTP_400_BAD_REQUEST)
         
-    elif data.get("status") in ["Absent", "Leave - Full Day", "Festival & Flexi Holiday", "Week Off", "Special Granted Conditional Leave","Present - Business Tour"]:
+    elif data.get("status") in ["Absent", "Leave-Full-Day", "Festival-&-Flexi-Holiday", "Week-Off", "Special-Granted-Conditional-Leave", "Present-Business-Tour"] :
         data["check_in"] = None
         data["check_in_ip"] = None
         data["check_in_cords"] = None
@@ -518,7 +518,7 @@ def checkout_attendance(request):
             "error": f"Attendance record not found for the given date. Details: {str(e)}",
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-    if checkout_obj.status in ["Absent", "Leave - Full Day", "Festival & Flexi Holiday", "Week Off", "Special Granted Conditional Leave","Present - Business Tour"]:
+    if checkout_obj.status in ["Absent", "Leave-Full-Day", "Festival-&-Flexi-Holiday", "Week-Off", "Special-Granted-Conditional-Leave", "Present-Business-Tour"]:
         return Response({"error": f"You can't checkout the attendance for status '{checkout_obj.status}'. Please update or contact the HR admin."}, status=status.HTTP_400_BAD_REQUEST)
     
     elif checkout_obj.check_out is not None:
