@@ -32,4 +32,4 @@ class EmpAttendanceSerializer(serializers.ModelSerializer):
         model = EmpAttendance
         # fields = '__all__'
         exclude = ["id", "employee", "user_master", "company_master", 
-                   "created_at", "updated_at", "approved_by", ]
+                   "created_at", "updated_at",]

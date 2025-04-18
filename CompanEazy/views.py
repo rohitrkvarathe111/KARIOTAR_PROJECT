@@ -424,6 +424,7 @@ def checkin_attendance(request):
         data["check_in"] = None
         data["check_in_ip"] = None
         data["check_in_cords"] = None
+        data["check_in_img"] = None
         
 
     file_fields = {"check_in_img"}
@@ -553,7 +554,7 @@ def checkout_attendance(request):
 
 
 
-@api_view(['GET','PUT'])
+@api_view(['GET'])
 def get_self_attendance(request):
     session_id = request.GET.get('session_id')
     if not session_id:
@@ -569,10 +570,29 @@ def get_self_attendance(request):
     except Employee.DoesNotExist:
         return Response({"error": "Employee data not found"}, status=status.HTTP_404_NOT_FOUND)
 
+
+    moy = request.GET.get('moy', "2025-04")
+    if not re.match(r"\d{4}-\d{2}", moy):
+        return Response({"error": "'moy' Month or year must be in format 'YYYY-MM'"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    year, month = map(int, moy.split("-")) 
     attendance_list = EmpAttendance.objects.filter(employee=employee, user_master=employee.user_master, 
-                                                   company_master=employee.company_master).order_by('date')
+                                company_master=employee.company_master,date__month=month,date__year=year).order_by('date')
 
     attendance_list = EmpAttendanceSerializer(attendance_list, many=True).data
-    return Response(attendance_list, status=status.HTTP_200_OK)
+
+    # List of all possible status keys
+    status_keys = set(choice[0] for choice in EmpAttendance.ATTENDANCE_STATUS_CHOICES)
+    status_count = {key: 0 for key in status_keys}
+
+    # Count occurrences
+    for record in attendance_list:
+        st = record.get("status")
+        if st in status_count:
+            status_count[st] += 1
+
+    return Response({
+        "attendance_sum": status_count,
+        "table_data": attendance_list}, status=status.HTTP_200_OK)
 
 
