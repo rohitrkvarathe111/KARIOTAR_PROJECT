@@ -596,3 +596,53 @@ def get_self_attendance(request):
         "table_data": attendance_list}, status=status.HTTP_200_OK)
 
 
+
+
+
+
+@api_view(['GET','POST'])
+def attendance_approved(request):
+    session_id = request.GET.get('session_id')
+    if not session_id:
+        return Response({"error": "session_id not provided"}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        session = SessionStore(session_key=session_id)
+        session_data = dict(session.items())
+    except Exception:
+        return Response({"error": "Invalid session_id"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    user_master_id = session_data.get('user_master_id')
+    try:
+        user_master = UserMaster.objects.get(id=user_master_id)
+    except UserMaster.DoesNotExist:
+        return Response({"error": "User data not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    try:
+        emp_umi = request.GET.get('emp_umi')
+        employee = Employee.objects.get(user_master_id=emp_umi)
+        if employee.funt_manager != user_master and employee.admin_manager != user_master:
+            return Response({"error": "You are not authorized to view this employee's attendance"}, status=status.HTTP_403_FORBIDDEN)
+    except Exception as e:
+        return Response({"error": f"Employee not found. {str(e)}"}, status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'POST':
+        date = request.data.get('date')
+
+        
+        return Response({"error": "'date' is required in POST request"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        attendance_list = EmpAttendance.objects.filter(employee=employee).order_by('-date')
+        attendance_list = EmpAttendanceSerializer(attendance_list, many=True).data
+    except Exception as e:
+        return Response({"error": f"Error fetching attendance data. {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    
+    return Response({"attendance_data": attendance_list}, status=status.HTTP_200_OK)
+
+
+
+
+    
+
+    

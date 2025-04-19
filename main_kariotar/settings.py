@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # 'rest_framework.authtoken',
     'rest_framework',
-    # "debug_toolbar",
+    "debug_toolbar",
     'kariotar_auth',
     'helpergenius',
     'CompanEazy',
@@ -57,7 +57,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # "debug_toolbar.middleware.DebugToolbarMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = 'main_kariotar.urls'
@@ -69,7 +69,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                # "django.template.context_processors.debug",
+                "django.template.context_processors.debug",
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -174,30 +174,30 @@ RUNSERVER_CREAD = {
       "password": "ROHIT@!@#123",
     }
 
-# DEBUG_TOOLBAR_PANELS = [
-#     # "ddt_request_history.panels.request_history.RequestHistoryPanel",  # Here it is
-#     "debug_toolbar.panels.versions.VersionsPanel",
-#     "debug_toolbar.panels.timer.TimerPanel",
-#     "debug_toolbar.panels.settings.SettingsPanel",
-#     "debug_toolbar.panels.headers.HeadersPanel",
-#     "debug_toolbar.panels.request.RequestPanel",
-#     "debug_toolbar.panels.sql.SQLPanel",
-#     "debug_toolbar.panels.templates.TemplatesPanel",
-#     "debug_toolbar.panels.staticfiles.StaticFilesPanel",
-#     "debug_toolbar.panels.cache.CachePanel",
-#     "debug_toolbar.panels.signals.SignalsPanel",
-#     "debug_toolbar.panels.logging.LoggingPanel",
-#     "debug_toolbar.panels.redirects.RedirectsPanel",
-#     "debug_toolbar.panels.profiling.ProfilingPanel",
-# ]
-# DEBUG_TOOLBAR_PATCH_SETTINGS = True
-# DEBUG_TOOLBAR_CONFIG = {
-#     "DISABLE_PANELS": [
-#         "debug_toolbar.panels.redirects.RedirectsPanel",
-#     ],
-#     # "SHOW_TOOLBAR_CALLBACK": "ddt_request_history.panels.request_history.allow_ajax",
-#     "SHOW_TEMPLATE_CONTEXT": True,
-# }
+DEBUG_TOOLBAR_PANELS = [
+    # "ddt_request_history.panels.request_history.RequestHistoryPanel",  # Here it is
+    "debug_toolbar.panels.versions.VersionsPanel",
+    "debug_toolbar.panels.timer.TimerPanel",
+    "debug_toolbar.panels.settings.SettingsPanel",
+    "debug_toolbar.panels.headers.HeadersPanel",
+    "debug_toolbar.panels.request.RequestPanel",
+    "debug_toolbar.panels.sql.SQLPanel",
+    "debug_toolbar.panels.templates.TemplatesPanel",
+    "debug_toolbar.panels.staticfiles.StaticFilesPanel",
+    "debug_toolbar.panels.cache.CachePanel",
+    "debug_toolbar.panels.signals.SignalsPanel",
+    "debug_toolbar.panels.logging.LoggingPanel",
+    "debug_toolbar.panels.redirects.RedirectsPanel",
+    "debug_toolbar.panels.profiling.ProfilingPanel",
+]
+DEBUG_TOOLBAR_PATCH_SETTINGS = True
+DEBUG_TOOLBAR_CONFIG = {
+    "DISABLE_PANELS": [
+        "debug_toolbar.panels.redirects.RedirectsPanel",
+    ],
+    # "SHOW_TOOLBAR_CALLBACK": "ddt_request_history.panels.request_history.allow_ajax",
+    "SHOW_TEMPLATE_CONTEXT": True,
+}
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
