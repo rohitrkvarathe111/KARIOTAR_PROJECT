@@ -193,6 +193,7 @@ class EmpAttendance(AuditModel):
     total_hours = models.IntegerField(null=True, blank=True)
     remark = models.TextField(null=True, blank=True)
     approved_by = models.ForeignKey(UserMaster, on_delete=models.CASCADE, related_name="usermasterid", null=True, blank=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
 
 
     def __str__(self):

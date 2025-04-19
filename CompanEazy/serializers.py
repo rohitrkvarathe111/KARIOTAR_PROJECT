@@ -31,5 +31,5 @@ class EmpAttendanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmpAttendance
         # fields = '__all__'
-        exclude = ["id", "employee", "user_master", "company_master", 
+        exclude = ["id", "employee", "company_master", 
                    "created_at", "updated_at",]

@@ -1,6 +1,7 @@
 from django.shortcuts import render
 import random
 from django.utils.timezone import now
+from django.utils import timezone
 from kariotar_auth.decorators import verified_user
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -596,10 +597,6 @@ def get_self_attendance(request):
         "table_data": attendance_list}, status=status.HTTP_200_OK)
 
 
-
-
-
-
 @api_view(['GET','POST'])
 def attendance_approved(request):
     session_id = request.GET.get('session_id')
@@ -612,8 +609,9 @@ def attendance_approved(request):
         return Response({"error": "Invalid session_id"}, status=status.HTTP_400_BAD_REQUEST)
     
     user_master_id = session_data.get('user_master_id')
+    company_id = session_data.get('company_id')
     try:
-        user_master = UserMaster.objects.get(id=user_master_id)
+        user_master = UserMaster.objects.get(id=user_master_id, company_master_id=company_id)
     except UserMaster.DoesNotExist:
         return Response({"error": "User data not found"}, status=status.HTTP_404_NOT_FOUND)
     
@@ -627,9 +625,24 @@ def attendance_approved(request):
     
     if request.method == 'POST':
         date = request.data.get('date')
-
+        emp_umi = request.data.get('emp_umi')
+        remark = request.data.get('remark')
+        if not date or not emp_umi:        
+            return Response({"error": "'date' is required in POST request"}, status=status.HTTP_400_BAD_REQUEST)
         
-        return Response({"error": "'date' is required in POST request"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            attendance_obj = EmpAttendance.objects.get(date=date, user_master_id=emp_umi, company_master_id=company_id)
+        except Exception as e:
+            return Response({"error": f"Attendance record not found. {str(e)}"}, status=status.HTTP_404_NOT_FOUND)
+        if attendance_obj.approved_by is not None:
+            return Response({"error": "Attendance record has already been approved."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        attendance_obj.approved_by = user_master
+        attendance_obj.approved_at = timezone.now()
+        attendance_obj.remark = remark
+        attendance_obj.save()
+
+        return Response({"message": f"{attendance_obj.emp_name} Attendance is approved successfully."}, status=status.HTTP_200_OK)
 
     try:
         attendance_list = EmpAttendance.objects.filter(employee=employee).order_by('-date')
