@@ -162,7 +162,7 @@ def User_login(request):
         request.session["first_name"] = user.first_name
         request.session["last_name"] = user.last_name
         try:           
-            user_object =  UserMaster.objects.get(email=email)
+            user_object =  UserMaster.objects.get(email=email, is_active=True)
             request.session["user_master_id"] = user_object.id
             # request.session["unique_username"] = user_object.unique_username
             request.session["mobile_number"] = user_object.mobile_number
