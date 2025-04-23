@@ -611,13 +611,13 @@ def attendance_approved(request):
     user_master_id = session_data.get('user_master_id')
     company_id = session_data.get('company_id')
     try:
-        user_master = UserMaster.objects.get(id=user_master_id, company_master_id=company_id)
+        user_master = UserMaster.objects.get(id=user_master_id, company_master_id=company_id,is_active=True)
     except UserMaster.DoesNotExist:
         return Response({"error": "User data not found"}, status=status.HTTP_404_NOT_FOUND)
     
     try:
         emp_umi = request.GET.get('emp_umi')
-        employee = Employee.objects.get(user_master_id=emp_umi)
+        employee = Employee.objects.get(user_master_id=emp_umi, is_active=True)
         if employee.funt_manager != user_master and employee.admin_manager != user_master and user_master.user_type.user_type != "COMPANY HR ADMIN":
             return Response({"error": "You are not authorized to view this employee's attendance"}, status=status.HTTP_403_FORBIDDEN)
     except Exception as e:
